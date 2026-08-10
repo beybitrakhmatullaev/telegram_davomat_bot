@@ -50,6 +50,11 @@ def init_db():
         FOREIGN KEY (student_id) REFERENCES students(id)
     )
     """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            chat_id INTEGER PRIMARY KEY
+        )
+        """)
     conn.commit()
     conn.close()
 
@@ -151,6 +156,38 @@ def get_presentees(query_date):
         ORDER BY students.full_name
     """, (query_date,))
     result = cur.fetchall()
+    conn.close()
+    return result
+
+def get_attendance_percentage():
+    conn = sqlite3.connect("attendance.db")
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT students.full_name,
+               SUM(CASE WHEN attendance.status='present' THEN 1 ELSE 0 END) as present,
+               COUNT(*) as total
+        FROM attendance
+        JOIN students ON attendance.student_id = students.id
+        GROUP BY students.id
+        ORDER BY students.full_name
+    """)
+    result = cur.fetchall()
+    conn.close()
+    return result
+
+def add_user(chat_id):
+    conn = sqlite3.connect("attendance.db")
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO users (chat_id) VALUES (?)", (chat_id,))
+    conn.commit()
+    conn.close()
+
+
+def get_all_users():
+    conn = sqlite3.connect("attendance.db")
+    cur = conn.cursor()
+    cur.execute("SELECT chat_id FROM users")
+    result = [row[0] for row in cur.fetchall()]
     conn.close()
     return result
 

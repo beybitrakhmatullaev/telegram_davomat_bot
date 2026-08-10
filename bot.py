@@ -7,6 +7,13 @@ from ai import ask_ai, OPENROUTER_API_KEY
 
 from dotenv import load_dotenv
 import os
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import io
+from db import (add_student, get_all_students, mark_attendance,
+                 get_attendance_summary, delete_student, get_weekly_report,
+                 add_user, get_all_users, get_attendance_percentage)
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -23,6 +30,7 @@ def main_menu():
         types.InlineKeyboardButton("🗑 O'quvchini o'chirish", callback_data="deletestudent"),
         types.InlineKeyboardButton("📊 Haftalik hisobot", callback_data="weeklyreport"),
         types.InlineKeyboardButton("🤖 AI'dan so'rash", callback_data="ask"),
+        types.InlineKeyboardButton("📈 Statistika grafigi", callback_data="chart"),
     )
     return markup
 
@@ -98,6 +106,29 @@ def callback_router(call):
     elif call.data == "ask":
         msg = bot.send_message(chat_id, "Savolingizni yozing:")
         bot.register_next_step_handler(msg, ask_step)
+
+    elif call.data == "chart":
+        data = get_attendance_percentage()
+        if not data:
+            bot.send_message(chat_id, "Hali davomat ma'lumoti yo'q.")
+            return
+
+        names = [row[0] for row in data]
+        percentages = [round(row[1] / row[2] * 100, 1) if row[2] > 0 else 0 for row in data]
+
+        plt.figure(figsize=(8, max(4, len(names) * 0.4)))
+        plt.barh(names, percentages, color="#4CAF50")
+        plt.xlabel("Davomat foizi (%)")
+        plt.xlim(0, 100)
+        plt.title("O'quvchilar davomati")
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        plt.close()
+        buf.seek(0)
+
+        bot.send_photo(chat_id, buf, reply_markup=main_menu())
 
 def add_student_step(message):
     names = [n.strip() for n in message.text.split('\n') if n.strip()]
