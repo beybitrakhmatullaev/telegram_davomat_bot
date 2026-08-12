@@ -102,10 +102,10 @@ def ask_ai(user_question: str) -> str:
                        f"tegishli funksiyani chaqir — ma'lumotni o'zing to'qib yozma. "
                        f"'Shu hafta', 'bu hafta' kabi so'rovlar uchun get_weekly_report "
                        f"funksiyasini ishlat. Javobni o'zbek tilida, qisqa va aniq yoz."
-                       f"Diqqat: get_absentees yoki get_presentees bo'sh natija qaytarsa, bu 'hech kim kelmagan' "
-                       f"degani emas — bu davomat hali belgilanmagan bo'lishi mumkin. Shuning uchun avval "
-                       f"is_attendance_marked funksiyasini chaqir; agar u False qaytarsa, foydalanuvchiga "
-                       f"'bu sana uchun davomat hali belgilanmagan' deb ayt, hech narsani o'zing to'qib yozma. "
+                       f"Diqqat: get_absentees bo'sh natija qaytarsa, bu 'hech kim kelmagan' degani — barcha "
+                       f"o'quvchilar kelgan hisoblanadi. Avval is_attendance_marked funksiyasini chaqir; agar u "
+                       f"False qaytarsa (davomat belgilanmagan), foydalanuvchiga xuddi hamma kelgandek javob ber: "
+                       f"'kelmagan o'quvchi yo'q, hammasi keldi' deb ayt. "
         },
         {"role": "user", "content": user_question}
     ]
