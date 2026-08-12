@@ -101,23 +101,26 @@ def ask_ai(user_question: str) -> str:
                        f"aniq YYYY-MM-DD formatida sana ber. Javob berishdan oldin albatta "
                        f"tegishli funksiyani chaqir — ma'lumotni o'zing to'qib yozma. "
                        f"'Shu hafta', 'bu hafta' kabi so'rovlar uchun get_weekly_report "
-                       f"funksiyasini ishlat. Javobni o'zbek tilida, qisqa va aniq yoz."
-                       f"Diqqat: get_absentees bo'sh natija qaytarsa, bu 'hech kim kelmagan' degani — barcha "
-                       f"o'quvchilar kelgan hisoblanadi. Avval is_attendance_marked funksiyasini chaqir; agar u "
-                       f"False qaytarsa (davomat belgilanmagan), foydalanuvchiga xuddi hamma kelgandek javob ber: "
-                       f"'kelmagan o'quvchi yo'q, hammasi keldi' deb ayt. "
+                       f"funksiyasini ishlat. Javobni o'zbek tilida, qisqa va aniq yoz. "
+                       f"Diqqat: get_absentees bo'sh natija qaytarsa, bu 'hech kim kelmagan' "
+                       f"degani — barcha o'quvchilar kelgan hisoblanadi. Avval is_attendance_marked "
+                       f"funksiyasini chaqir; agar u False qaytarsa (davomat belgilanmagan), "
+                       f"foydalanuvchiga xuddi hamma kelgandek javob ber: 'kelmagan o'quvchi yo'q, "
+                       f"hammasi keldi' deb ayt. Agar u True qaytarsa, albatta get_absentees yoki "
+                       f"get_presentees funksiyasini ham chaqirib, haqiqiy natijaga qarab javob ber."
         },
         {"role": "user", "content": user_question}
     ]
 
     try:
-        msg = _call_ai(messages)
+        for _ in range(5):  # ortiqcha cheksiz aylanishning oldini olish uchun limit
+            msg = _call_ai(messages)
 
-        if msg.get("tool_calls"):
+            if not msg.get("tool_calls"):
+                return msg["content"]
+
             messages.append(msg)
 
-            # AI bir nechta funksiyani birdan chaqirishi mumkin —
-            # har biriga alohida javob qaytarish shart, aks holda API xato beradi
             for call in msg["tool_calls"]:
                 func_name = call["function"]["name"]
                 args = json.loads(call["function"]["arguments"] or "{}")
@@ -133,10 +136,9 @@ def ask_ai(user_question: str) -> str:
                     "content": json.dumps(data, ensure_ascii=False)
                 })
 
-            final = _call_ai(messages, use_tools=False)
-            return final["content"]
-
-        return msg["content"]
+        # 5 aylanishdan keyin ham tugamasa, oxirgi javobni tools'siz olamiz
+        final = _call_ai(messages, use_tools=False)
+        return final["content"]
 
     except Exception as e:
         print("ask_ai XATOSI:", repr(e))
