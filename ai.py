@@ -4,7 +4,7 @@ from datetime import date
 
 import requests
 from dotenv import load_dotenv
-from db import get_absentees, get_presentees, get_weekly_report
+from db import get_absentees, get_presentees, get_weekly_report, is_attendance_marked
 
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -49,6 +49,20 @@ TOOLS = [
                 "properties": {}
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "is_attendance_marked",
+            "description": "Berilgan sanada davomat umuman belgilangan-belgilanmaganini tekshiradi. Har doim get_absentees yoki get_presentees'dan OLDIN shu funksiyani chaqir.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {"type": "string", "description": "YYYY-MM-DD formatida sana"}
+                },
+                "required": ["date"]
+            }
+        }
     }
 ]
 
@@ -56,7 +70,9 @@ FUNCTIONS = {
     "get_absentees": get_absentees,
     "get_presentees": get_presentees,
     "get_weekly_report": get_weekly_report,
+    "is_attendance_marked": is_attendance_marked,
 }
+
 
 
 def _call_ai(messages, use_tools=True):
@@ -86,6 +102,10 @@ def ask_ai(user_question: str) -> str:
                        f"tegishli funksiyani chaqir — ma'lumotni o'zing to'qib yozma. "
                        f"'Shu hafta', 'bu hafta' kabi so'rovlar uchun get_weekly_report "
                        f"funksiyasini ishlat. Javobni o'zbek tilida, qisqa va aniq yoz."
+                       f"Diqqat: get_absentees yoki get_presentees bo'sh natija qaytarsa, bu 'hech kim kelmagan' "
+                       f"degani emas — bu davomat hali belgilanmagan bo'lishi mumkin. Shuning uchun avval "
+                       f"is_attendance_marked funksiyasini chaqir; agar u False qaytarsa, foydalanuvchiga "
+                       f"'bu sana uchun davomat hali belgilanmagan' deb ayt, hech narsani o'zing to'qib yozma. "
         },
         {"role": "user", "content": user_question}
     ]

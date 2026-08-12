@@ -192,4 +192,14 @@ def get_all_users():
     return result
 
 
+def is_attendance_marked(query_date):
+    """Berilgan sanada davomat umuman belgilanganmi yoki yo'qmi."""
+    conn = sqlite3.connect("attendance.db")
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM attendance WHERE date = ?", (query_date,))
+    count = cur.fetchone()[0]
+    conn.close()
+    return count > 0
+
+
 init_db()
