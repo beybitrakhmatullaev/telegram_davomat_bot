@@ -47,13 +47,22 @@ def callback_router(call):
         msg = bot.send_message(chat_id, "Har birini yangi qatorda yozing:\nAziz Karimov\nBotir Yusupov")
         bot.register_next_step_handler(msg, add_student_step)
 
+
     elif call.data == "students":
+
         students = get_all_students()
+
         if not students:
+
             bot.send_message(chat_id, "O'quvchilar hali qo'shilmagan.")
+
         else:
-            text = "\n".join(f"{s[0]}. {s[1]}" for s in students)
-            bot.send_message(chat_id, text)
+
+            text = f"📋 <b>O'quvchilar ro'yxati</b> ({len(students)} ta)\n\n"
+
+            text += "\n".join(f"<b>{s[0]}.</b> {s[1]}" for s in students)
+
+            bot.send_message(chat_id, text, parse_mode="HTML", reply_markup=main_menu())
 
     elif call.data == "mark":
         students = get_all_students()
